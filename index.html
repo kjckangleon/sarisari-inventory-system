@@ -126,19 +126,18 @@
         e.target.reset();
       });
 
-      function addItem(item) {
-        items.push(item);
-        saveItems();
-        renderItems();
-      }
-
       async function startCameraScan() {
-        scanStatus.textContent = 'Initializing camera...';
+        scanStatus.textContent = 'Requesting camera access...';
         videoElement.classList.remove('hidden');
 
         try {
+          const devices = await ZXing.BrowserMultiFormatReader.listVideoInputDevices();
+          const backCamera = devices.find(device => device.label.toLowerCase().includes('back')) || devices[0];
+
+          if (!backCamera) throw new Error('No video input devices found');
+
           codeReader = new ZXing.BrowserMultiFormatReader();
-          await codeReader.decodeFromVideoDevice(null, videoElement, (result, err) => {
+          await codeReader.decodeFromVideoDevice(backCamera.deviceId, videoElement, (result, err) => {
             if (result) {
               scanStatus.textContent = `Scanned barcode: ${result.getText()}`;
               const scanned = result.getText();
@@ -157,8 +156,8 @@
           });
           scanStatus.textContent = 'Scanning...';
         } catch (err) {
-          scanStatus.textContent = 'Error accessing camera. Please allow permission or use a compatible device.';
-          console.error(err);
+          scanStatus.textContent = '❌ Unable to access camera. Please check browser permissions and ensure a camera is available.';
+          console.error('Camera error:', err);
         }
       }
 
