@@ -136,3 +136,51 @@ li {
   font-weight: 500;
   display: inline-block;
 }
+
+/* Make the barcode scanner responsive */
+#barcode-scanner {
+  width: 100%;
+  max-width: 480px;
+  height: auto;
+  border-radius: 8px;
+  margin-top: 1rem;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+/* Action buttons layout for item list */
+li .action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.edit-btn,
+.delete-btn {
+  flex: 1 1 120px;
+}
+
+/* Responsive spacing for inputs */
+form input, form button {
+  margin-bottom: 0.5rem;
+}
+
+/* Make modals scrollable on small screens */
+.modal-content {
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* Small screen tweaks */
+@media (max-width: 600px) {
+  h1 {
+    font-size: 1.5rem;
+  }
+  h2 {
+    font-size: 1.25rem;
+  }
+  .container {
+    padding: 1rem;
+  }
+}
+
