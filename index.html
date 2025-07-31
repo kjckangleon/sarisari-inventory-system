@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Item List Manager</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@zxing/library@latest"></script>
   </head>
   <body class="bg-gray-50 min-h-screen p-6 font-sans">
     <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-md p-6">
@@ -29,6 +30,13 @@
         <video id="barcode-scanner" class="w-full max-w-md border rounded-md" autoplay muted playsinline></video>
       </section>
 
+      <!-- Find by Barcode -->
+      <section class="mb-6">
+        <h2 class="text-xl font-semibold mb-2">🔍 Find Item by Barcode</h2>
+        <input type="text" id="search-barcode" placeholder="Enter or scan barcode" class="input input-bordered p-2 border rounded w-full max-w-md" />
+        <div id="search-result" class="mt-4"></div>
+      </section>
+
       <!-- Item List -->
       <section>
         <h2 class="text-xl font-semibold mb-2">📋 Item List</h2>
@@ -36,10 +44,10 @@
       </section>
     </div>
 
-    <script type="module">
-      import { BrowserMultiFormatReader } from 'https://cdn.jsdelivr.net/npm/@zxing/library@latest/esm/index.min.js';
-
+    <script>
       const itemList = document.getElementById('items-ul');
+      const searchInput = document.getElementById('search-barcode');
+      const searchResult = document.getElementById('search-result');
       let items = JSON.parse(localStorage.getItem('items')) || [];
 
       function saveItems() {
@@ -105,7 +113,7 @@
       }
 
       function startCameraScan() {
-        const codeReader = new BrowserMultiFormatReader();
+        const codeReader = new ZXing.BrowserMultiFormatReader();
         codeReader.decodeFromVideoDevice(null, 'barcode-scanner', (result, err) => {
           if (result) {
             const scanned = result.getText();
@@ -123,6 +131,28 @@
           }
         });
       }
+
+      searchInput.addEventListener('input', function() {
+        const query = searchInput.value.trim();
+        if (query === '') {
+          searchResult.innerHTML = '';
+          return;
+        }
+        const item = items.find(i => i.barcode === query);
+        if (item) {
+          searchResult.innerHTML = `
+            <div class="p-4 border rounded bg-green-50">
+              <h3 class="font-bold text-lg">${item.name}</h3>
+              <p>Price: ₱${item.price}</p>
+              <p>Stock: ${item.stock}</p>
+              <p>Barcode: ${item.barcode}</p>
+              ${item.image ? `<img src="${item.image}" alt="${item.name}" class="w-32 h-32 mt-2 object-cover rounded" />` : ''}
+            </div>
+          `;
+        } else {
+          searchResult.innerHTML = '<p class="text-red-600">Item not found.</p>';
+        }
+      });
 
       startCameraScan();
       renderItems();
