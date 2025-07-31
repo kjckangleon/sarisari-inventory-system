@@ -27,7 +27,8 @@
       <!-- Barcode Input with Camera -->
       <section class="mb-6">
         <h2 class="text-xl font-semibold mb-2">📷 Scan Barcode with Camera</h2>
-        <video id="barcode-scanner" class="w-full max-w-md border rounded-md" autoplay muted playsinline></video>
+        <button id="start-scan" class="mb-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">Start Camera Scan</button>
+        <video id="barcode-scanner" class="w-full max-w-md border rounded-md hidden" autoplay muted playsinline></video>
       </section>
 
       <!-- Find by Barcode -->
@@ -48,7 +49,10 @@
       const itemList = document.getElementById('items-ul');
       const searchInput = document.getElementById('search-barcode');
       const searchResult = document.getElementById('search-result');
+      const startScanBtn = document.getElementById('start-scan');
+      const videoElement = document.getElementById('barcode-scanner');
       let items = JSON.parse(localStorage.getItem('items')) || [];
+      let codeReader;
 
       function saveItems() {
         localStorage.setItem('items', JSON.stringify(items));
@@ -68,6 +72,7 @@
                 <p>Stock: ${item.stock}</p>
                 <p>Barcode: ${item.barcode || 'N/A'}</p>
               </div>
+              <button onclick="editItem(${index})" class="bg-yellow-400 hover:bg-yellow-500 text-black px-3 py-1 rounded">Edit</button>
               <button onclick="deleteItem(${index})" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded">Delete</button>
             </div>
           `;
@@ -78,6 +83,19 @@
       window.deleteItem = function(index) {
         if (confirm('Are you sure you want to delete this item?')) {
           items.splice(index, 1);
+          saveItems();
+          renderItems();
+        }
+      };
+
+      window.editItem = function(index) {
+        const item = items[index];
+        const name = prompt('Edit Name:', item.name);
+        const price = prompt('Edit Price:', item.price);
+        const stock = prompt('Edit Stock:', item.stock);
+        const barcode = prompt('Edit Barcode:', item.barcode);
+        if (name && price && stock) {
+          items[index] = { ...item, name, price: parseFloat(price), stock: parseInt(stock), barcode };
           saveItems();
           renderItems();
         }
@@ -113,7 +131,8 @@
       }
 
       function startCameraScan() {
-        const codeReader = new ZXing.BrowserMultiFormatReader();
+        videoElement.classList.remove('hidden');
+        codeReader = new ZXing.BrowserMultiFormatReader();
         codeReader.decodeFromVideoDevice(null, 'barcode-scanner', (result, err) => {
           if (result) {
             const scanned = result.getText();
@@ -154,7 +173,7 @@
         }
       });
 
-      startCameraScan();
+      startScanBtn.addEventListener('click', startCameraScan);
       renderItems();
     </script>
   </body>
