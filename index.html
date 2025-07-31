@@ -4,45 +4,45 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Item List Manager</title>
-    <script src="https://cdn.tailwindcss.com" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="style.css" />
     <script src="https://cdn.jsdelivr.net/npm/@zxing/library@latest"></script>
   </head>
-  <body class="bg-gray-50 min-h-screen p-6 font-sans">
-    <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-md p-6">
-      <h1 class="text-3xl font-bold mb-4">📦 Item List Manager</h1>
+  <body>
+    <div class="container">
+      <h1>📦 Item List Manager</h1>
 
       <!-- Manual Input -->
-      <section class="mb-6">
-        <h2 class="text-xl font-semibold mb-2">➕ Add Item</h2>
-        <form id="manual-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <input type="text" id="manual-name" placeholder="Item Name" required class="input input-bordered p-2 border rounded" />
-          <input type="number" id="manual-price" placeholder="Price" required class="input input-bordered p-2 border rounded" />
-          <input type="number" id="manual-stock" placeholder="Stock" required class="input input-bordered p-2 border rounded" />
-          <input type="text" id="manual-code" placeholder="Barcode (optional)" class="input input-bordered p-2 border rounded" />
-          <input type="file" id="manual-image" accept="image/*" class="col-span-full" />
-          <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded col-span-full">Add Item</button>
+      <section>
+        <h2>➕ Add Item</h2>
+        <form id="manual-form">
+          <input type="text" id="manual-name" placeholder="Item Name" required />
+          <input type="number" id="manual-price" placeholder="Price" required />
+          <input type="number" id="manual-stock" placeholder="Stock" required />
+          <input type="text" id="manual-code" placeholder="Barcode (optional)" />
+          <input type="file" id="manual-image" accept="image/*" />
+          <button type="submit">Add Item</button>
         </form>
       </section>
 
       <!-- Barcode Input with Camera -->
-      <section class="mb-6">
-        <h2 class="text-xl font-semibold mb-2">📷 Scan Barcode with Camera</h2>
-        <button id="start-scan" class="mb-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">Start Camera Scan</button>
-        <video id="barcode-scanner" class="w-full max-w-md border rounded-md hidden" autoplay muted playsinline></video>
-        <p id="scan-status" class="text-gray-600 mt-2"></p>
+      <section>
+        <h2>📷 Scan Barcode with Camera</h2>
+        <button id="start-scan">Start Camera Scan</button>
+        <video id="barcode-scanner" class="hidden" autoplay muted playsinline></video>
+        <p id="scan-status"></p>
       </section>
 
       <!-- Find by Barcode -->
-      <section class="mb-6">
-        <h2 class="text-xl font-semibold mb-2">🔍 Find Item by Barcode</h2>
-        <input type="text" id="search-barcode" placeholder="Enter or scan barcode" class="input input-bordered p-2 border rounded w-full max-w-md" />
-        <div id="search-result" class="mt-4"></div>
+      <section>
+        <h2>🔍 Find Item by Barcode</h2>
+        <input type="text" id="search-barcode" placeholder="Enter or scan barcode" />
+        <div id="search-result"></div>
       </section>
 
       <!-- Item List -->
       <section>
-        <h2 class="text-xl font-semibold mb-2">📋 Item List</h2>
-        <ul id="items-ul" class="space-y-4"></ul>
+        <h2>📋 Item List</h2>
+        <ul id="items-ul"></ul>
       </section>
     </div>
 
@@ -64,19 +64,16 @@
         itemList.innerHTML = '';
         items.forEach((item, index) => {
           const li = document.createElement('li');
-          li.className = 'bg-white p-4 rounded shadow border';
           li.innerHTML = `
-            <div class="flex items-center gap-4">
-              ${item.image ? `<img src="${item.image}" alt="${item.name}" class="w-24 h-24 object-cover rounded" />` : ''}
-              <div class="flex-1">
-                <h3 class="font-bold text-lg">${item.name}</h3>
-                <p>Price: ₱${item.price}</p>
-                <p>Stock: ${item.stock}</p>
-                <p>Barcode: ${item.barcode || 'N/A'}</p>
-              </div>
-              <button onclick="editItem(${index})" class="bg-yellow-400 hover:bg-yellow-500 text-black px-3 py-1 rounded">Edit</button>
-              <button onclick="deleteItem(${index})" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded">Delete</button>
+            ${item.image ? `<img src="${item.image}" alt="${item.name}" />` : ''}
+            <div class="item-info">
+              <h3>${item.name}</h3>
+              <p>Price: ₱${item.price}</p>
+              <p>Stock: ${item.stock}</p>
+              <p>Barcode: ${item.barcode || 'N/A'}</p>
             </div>
+            <button class="edit-btn" onclick="editItem(${index})">Edit</button>
+            <button class="delete-btn" onclick="deleteItem(${index})">Delete</button>
           `;
           itemList.appendChild(li);
         });
@@ -103,7 +100,7 @@
         }
       };
 
-      document.getElementById('manual-form').addEventListener('submit', async function (e) {
+      document.getElementById('manual-form').addEventListener('submit', function (e) {
         e.preventDefault();
         const name = document.getElementById('manual-name').value.trim();
         const price = parseFloat(document.getElementById('manual-price').value);
@@ -126,19 +123,24 @@
         e.target.reset();
       });
 
+      function addItem(item) {
+        items.push(item);
+        saveItems();
+        renderItems();
+      }
+
       async function startCameraScan() {
         scanStatus.textContent = 'Requesting camera access...';
         videoElement.classList.remove('hidden');
-      
+
         try {
-          // Pre-check camera permission to force dialog if needed
           await navigator.mediaDevices.getUserMedia({ video: true });
-      
+
           const devices = await ZXing.BrowserMultiFormatReader.listVideoInputDevices();
           const backCamera = devices.find(device => device.label.toLowerCase().includes('back')) || devices[0];
-      
+
           if (!backCamera) throw new Error('No video input devices found');
-      
+
           codeReader = new ZXing.BrowserMultiFormatReader();
           await codeReader.decodeFromVideoDevice(backCamera.deviceId, videoElement, (result, err) => {
             if (result) {
@@ -157,15 +159,14 @@
               }
             }
           });
-      
+
           scanStatus.textContent = 'Scanning...';
-      
+
         } catch (err) {
-          scanStatus.textContent = '❌ Camera access failed. Check site permissions and use a secure (HTTPS) connection.';
+          scanStatus.textContent = `❌ Camera access failed: ${err.name}`;
           console.error('Camera access error:', err);
         }
       }
-
 
       searchInput.addEventListener('input', function() {
         const query = searchInput.value.trim();
@@ -177,15 +178,15 @@
         if (item) {
           searchResult.innerHTML = `
             <div class="p-4 border rounded bg-green-50">
-              <h3 class="font-bold text-lg">${item.name}</h3>
+              <h3>${item.name}</h3>
               <p>Price: ₱${item.price}</p>
               <p>Stock: ${item.stock}</p>
               <p>Barcode: ${item.barcode}</p>
-              ${item.image ? `<img src="${item.image}" alt="${item.name}" class="w-32 h-32 mt-2 object-cover rounded" />` : ''}
+              ${item.image ? `<img src="${item.image}" alt="${item.name}" />` : ''}
             </div>
           `;
         } else {
-          searchResult.innerHTML = '<p class="text-red-600">Item not found.</p>';
+          searchResult.innerHTML = '<p style="color: red;">Item not found.</p>';
         }
       });
 
