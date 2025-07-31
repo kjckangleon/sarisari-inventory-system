@@ -1,4 +1,4 @@
 /*
   Permissions-Policy: camera=(self)
-  Cross-Origin-Embedder-Policy: require-corp
+  Cross-Origin-Embedder-Policy: unsafe-none
   Cross-Origin-Opener-Policy: same-origin
