@@ -178,3 +178,11 @@ searchInput.addEventListener('input', function () {
 
 startScanBtn.addEventListener('click', startCameraScan);
 renderItems();
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    modal.classList.add('hidden');
+    previewModal.classList.add('hidden');
+  }
+});
+
