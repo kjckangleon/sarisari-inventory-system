@@ -1,124 +1,131 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Item List Manager</title>
-  <style>
-    body { font-family: sans-serif; padding: 20px; }
-    input, button, label { padding: 5px; margin: 5px; display: block; }
-    #item-list { margin-top: 20px; }
-    li { margin-bottom: 10px; }
-    img { max-width: 100px; max-height: 100px; display: block; margin-top: 5px; }
-  </style>
-</head>
-<body>
-  <h1>Item List</h1>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Item List Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-gray-50 min-h-screen p-6 font-sans">
+    <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-md p-6">
+      <h1 class="text-3xl font-bold mb-4">📦 Item List Manager</h1>
 
-  <!-- Manual Input -->
-  <h2>Manually Add Item</h2>
-  <form id="manual-form">
-    <input type="text" id="manual-name" placeholder="Item Name" required />
-    <input type="number" id="manual-price" placeholder="Price" required />
-    <input type="number" id="manual-stock" placeholder="Stock" required />
-    <input type="text" id="manual-code" placeholder="Barcode (optional)" />
-    <input type="file" id="manual-image" accept="image/*" />
-    <button type="submit">Add Item</button>
-  </form>
+      <!-- Manual Input -->
+      <section class="mb-6">
+        <h2 class="text-xl font-semibold mb-2">➕ Add Item</h2>
+        <form id="manual-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <input type="text" id="manual-name" placeholder="Item Name" required class="input input-bordered p-2 border rounded" />
+          <input type="number" id="manual-price" placeholder="Price" required class="input input-bordered p-2 border rounded" />
+          <input type="number" id="manual-stock" placeholder="Stock" required class="input input-bordered p-2 border rounded" />
+          <input type="text" id="manual-code" placeholder="Barcode (optional)" class="input input-bordered p-2 border rounded" />
+          <input type="file" id="manual-image" accept="image/*" class="col-span-full" />
+          <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded col-span-full">Add Item</button>
+        </form>
+      </section>
 
-  <!-- Barcode Input with Camera -->
-  <h2>Scan Barcode with Camera</h2>
-  <video id="barcode-scanner" width="300" height="200" style="border:1px solid #ccc;"></video>
+      <!-- Barcode Input with Camera -->
+      <section class="mb-6">
+        <h2 class="text-xl font-semibold mb-2">📷 Scan Barcode with Camera</h2>
+        <video id="barcode-scanner" class="w-full max-w-md border rounded-md" autoplay muted playsinline></video>
+      </section>
 
-  <!-- Item List -->
-  <div id="item-list">
-    <h2>Items</h2>
-    <ul id="items-ul"></ul>
-  </div>
+      <!-- Item List -->
+      <section>
+        <h2 class="text-xl font-semibold mb-2">📋 Item List</h2>
+        <ul id="items-ul" class="space-y-4"></ul>
+      </section>
+    </div>
 
-  <script type="module">
-    import { BrowserMultiFormatReader } from 'https://cdn.jsdelivr.net/npm/@zxing/library@latest/esm/index.min.js';
+    <script type="module">
+      import { BrowserMultiFormatReader } from 'https://cdn.jsdelivr.net/npm/@zxing/library@latest/esm/index.min.js';
 
-    const itemList = document.getElementById('items-ul');
-    let items = JSON.parse(localStorage.getItem('items')) || [];
+      const itemList = document.getElementById('items-ul');
+      let items = JSON.parse(localStorage.getItem('items')) || [];
 
-    function saveItems() {
-      localStorage.setItem('items', JSON.stringify(items));
-    }
+      function saveItems() {
+        localStorage.setItem('items', JSON.stringify(items));
+      }
 
-    function renderItems() {
-      itemList.innerHTML = '';
-      items.forEach((item, index) => {
-        const li = document.createElement('li');
-        li.innerHTML = `
-          <strong>${item.name}</strong><br>
-          Price: ₱${item.price} | Stock: ${item.stock} | Barcode: ${item.barcode || 'N/A'}<br>
-          ${item.image ? `<img src="${item.image}" alt="${item.name}" />` : ''}
-          <button onclick="deleteItem(${index})">Delete</button>
-        `;
-        itemList.appendChild(li);
+      function renderItems() {
+        itemList.innerHTML = '';
+        items.forEach((item, index) => {
+          const li = document.createElement('li');
+          li.className = 'bg-white p-4 rounded shadow border';
+          li.innerHTML = `
+            <div class="flex items-center gap-4">
+              ${item.image ? `<img src="${item.image}" alt="${item.name}" class="w-24 h-24 object-cover rounded" />` : ''}
+              <div class="flex-1">
+                <h3 class="font-bold text-lg">${item.name}</h3>
+                <p>Price: ₱${item.price}</p>
+                <p>Stock: ${item.stock}</p>
+                <p>Barcode: ${item.barcode || 'N/A'}</p>
+              </div>
+              <button onclick="deleteItem(${index})" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded">Delete</button>
+            </div>
+          `;
+          itemList.appendChild(li);
+        });
+      }
+
+      window.deleteItem = function(index) {
+        if (confirm('Are you sure you want to delete this item?')) {
+          items.splice(index, 1);
+          saveItems();
+          renderItems();
+        }
+      };
+
+      document.getElementById('manual-form').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const name = document.getElementById('manual-name').value.trim();
+        const price = parseFloat(document.getElementById('manual-price').value);
+        const stock = parseInt(document.getElementById('manual-stock').value);
+        const barcode = document.getElementById('manual-code').value.trim();
+        const imageFile = document.getElementById('manual-image').files[0];
+        let imageUrl = '';
+
+        if (imageFile) {
+          const reader = new FileReader();
+          reader.onload = function (evt) {
+            imageUrl = evt.target.result;
+            addItem({ name, price, stock, barcode, image: imageUrl });
+          };
+          reader.readAsDataURL(imageFile);
+        } else {
+          addItem({ name, price, stock, barcode, image: '' });
+        }
+
+        e.target.reset();
       });
-    }
 
-    window.deleteItem = function(index) {
-      if (confirm('Are you sure you want to delete this item?')) {
-        items.splice(index, 1);
+      function addItem(item) {
+        items.push(item);
         saveItems();
         renderItems();
       }
-    };
 
-    document.getElementById('manual-form').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      const name = document.getElementById('manual-name').value.trim();
-      const price = parseFloat(document.getElementById('manual-price').value);
-      const stock = parseInt(document.getElementById('manual-stock').value);
-      const barcode = document.getElementById('manual-code').value.trim();
-      const imageFile = document.getElementById('manual-image').files[0];
-      let imageUrl = '';
-
-      if (imageFile) {
-        const reader = new FileReader();
-        reader.onload = function(evt) {
-          imageUrl = evt.target.result;
-          addItem({ name, price, stock, barcode, image: imageUrl });
-        };
-        reader.readAsDataURL(imageFile);
-      } else {
-        addItem({ name, price, stock, barcode, image: '' });
+      function startCameraScan() {
+        const codeReader = new BrowserMultiFormatReader();
+        codeReader.decodeFromVideoDevice(null, 'barcode-scanner', (result, err) => {
+          if (result) {
+            const scanned = result.getText();
+            const found = items.find(i => i.barcode === scanned);
+            if (!found) {
+              const name = prompt('Item name for scanned barcode:');
+              const price = prompt('Price:');
+              const stock = prompt('Stock:');
+              if (name && price && stock) {
+                addItem({ name, price: parseFloat(price), stock: parseInt(stock), barcode: scanned, image: '' });
+              }
+            } else {
+              alert(`Already exists: ${found.name}`);
+            }
+          }
+        });
       }
 
-      e.target.reset();
-    });
-
-    function addItem(item) {
-      items.push(item);
-      saveItems();
+      startCameraScan();
       renderItems();
-    }
-
-    function startCameraScan() {
-      const codeReader = new BrowserMultiFormatReader();
-      codeReader.decodeFromVideoDevice(null, 'barcode-scanner', (result, err) => {
-        if (result) {
-          const scanned = result.getText();
-          const found = items.find(i => i.barcode === scanned);
-          if (!found) {
-            const name = prompt('Item name for scanned barcode:');
-            const price = prompt('Price:');
-            const stock = prompt('Stock:');
-            if (name && price && stock) {
-              addItem({ name, price: parseFloat(price), stock: parseInt(stock), barcode: scanned, image: '' });
-            }
-          } else {
-            alert(`Already exists: ${found.name}`);
-          }
-        }
-      });
-    }
-
-    startCameraScan();
-    renderItems();
-  </script>
-</body>
+    </script>
+  </body>
 </html>
