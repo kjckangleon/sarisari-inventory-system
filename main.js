@@ -108,6 +108,12 @@ async function startCameraScan() {
         const found = items.find(i => i.barcode === scannedBarcode);
 
         codeReader.reset();
+        
+        if (videoElement.srcObject) {
+          videoElement.srcObject.getTracks().forEach(track => track.stop());
+          videoElement.srcObject = null;
+        }
+
         videoElement.classList.add('hidden');
         scanStatus.textContent = '✅ Scan complete';
 
