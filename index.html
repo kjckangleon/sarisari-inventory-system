@@ -29,6 +29,7 @@
         <h2 class="text-xl font-semibold mb-2">📷 Scan Barcode with Camera</h2>
         <button id="start-scan" class="mb-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">Start Camera Scan</button>
         <video id="barcode-scanner" class="w-full max-w-md border rounded-md hidden" autoplay muted playsinline></video>
+        <p id="scan-status" class="text-gray-600 mt-2"></p>
       </section>
 
       <!-- Find by Barcode -->
@@ -51,6 +52,7 @@
       const searchResult = document.getElementById('search-result');
       const startScanBtn = document.getElementById('start-scan');
       const videoElement = document.getElementById('barcode-scanner');
+      const scanStatus = document.getElementById('scan-status');
       let items = JSON.parse(localStorage.getItem('items')) || [];
       let codeReader;
 
@@ -130,25 +132,34 @@
         renderItems();
       }
 
-      function startCameraScan() {
+      async function startCameraScan() {
+        scanStatus.textContent = 'Initializing camera...';
         videoElement.classList.remove('hidden');
-        codeReader = new ZXing.BrowserMultiFormatReader();
-        codeReader.decodeFromVideoDevice(null, 'barcode-scanner', (result, err) => {
-          if (result) {
-            const scanned = result.getText();
-            const found = items.find(i => i.barcode === scanned);
-            if (!found) {
-              const name = prompt('Item name for scanned barcode:');
-              const price = prompt('Price:');
-              const stock = prompt('Stock:');
-              if (name && price && stock) {
-                addItem({ name, price: parseFloat(price), stock: parseInt(stock), barcode: scanned, image: '' });
+
+        try {
+          codeReader = new ZXing.BrowserMultiFormatReader();
+          await codeReader.decodeFromVideoDevice(null, videoElement, (result, err) => {
+            if (result) {
+              scanStatus.textContent = `Scanned barcode: ${result.getText()}`;
+              const scanned = result.getText();
+              const found = items.find(i => i.barcode === scanned);
+              if (!found) {
+                const name = prompt('Item name for scanned barcode:');
+                const price = prompt('Price:');
+                const stock = prompt('Stock:');
+                if (name && price && stock) {
+                  addItem({ name, price: parseFloat(price), stock: parseInt(stock), barcode: scanned, image: '' });
+                }
+              } else {
+                alert(`Already exists: ${found.name}`);
               }
-            } else {
-              alert(`Already exists: ${found.name}`);
             }
-          }
-        });
+          });
+          scanStatus.textContent = 'Scanning...';
+        } catch (err) {
+          scanStatus.textContent = 'Error accessing camera. Please allow permission or use a compatible device.';
+          console.error(err);
+        }
       }
 
       searchInput.addEventListener('input', function() {
